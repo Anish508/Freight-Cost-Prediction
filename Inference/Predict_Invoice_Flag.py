@@ -4,6 +4,7 @@ Predict_Invoice_Flag.py — Invoice Risk Flagging Inference Layer
 
 Loads the saved Random Forest classifier + MinMaxScaler and predicts whether
 a vendor invoice should be flagged for manual review using a Hybrid (Rule + ML) Architecture.
+Supports configurable risk tolerances and multi-factor risk audit tags.
 """
 
 from pathlib import Path
@@ -33,7 +34,7 @@ FEATURE_COLS = [
 
 
 # ---------------------------------------------------------------------------
-# Core inference function (Hybrid Architecture: Rule Engine + ML Model)
+# Core inference function (Hybrid Architecture: Configurable Rules + ML Model)
 # ---------------------------------------------------------------------------
 
 def predict_invoice_flag(
@@ -43,6 +44,8 @@ def predict_invoice_flag(
     total_item_quantity: float | list,
     total_item_dollars:  float | list,
     days_po_to_invoice:  float | list = 0.0,
+    dollar_tolerance:    float = 5.0,
+    prob_cutoff:         float = 0.50,
 ) -> pd.DataFrame:
     """
     Predict whether one or more invoices should be flagged for manual review.
@@ -55,12 +58,15 @@ def predict_invoice_flag(
     total_item_quantity  : Total item quantity from purchase records (PO level).
     total_item_dollars   : Total item dollars from purchase records (PO level).
     days_po_to_invoice   : Days between PO Date and Invoice Date (default 0.0).
+    dollar_tolerance     : Maximum allowed dollar discrepancy tolerance (default $5.00).
+    prob_cutoff          : ML model flag probability threshold (default 0.50).
 
     Returns
     -------
     pd.DataFrame with input features plus:
       - ``flag_invoice``     : 1 = flag for review, 0 = auto-approve
       - ``flag_probability`` : Confidence score that the invoice should be flagged
+      - ``risk_reasons``     : Specific risk factors triggered
       - ``decision``         : Human-readable label
     """
     model  = joblib.load(_MODEL_PATH)
@@ -76,7 +82,6 @@ def predict_invoice_flag(
     tiD = _to_list(total_item_dollars)
     dpi = _to_list(days_po_to_invoice)
 
-    # Make length of dpi match other inputs if scalar default was passed
     if len(dpi) == 1 and len(iq) > 1:
         dpi = dpi * len(iq)
 
@@ -90,10 +95,10 @@ def predict_invoice_flag(
     })
 
     # Engineer delta and ratio features
-    df_in["dollar_discrepancy"] = (df_in["invoice_dollars"] - df_in["total_item_dollars"]).abs()
+    df_in["dollar_discrepancy"] = (df_in["invoice_dollars"] - df_in["total_item_dollars"]).abs().round(2)
     df_in["qty_discrepancy"] = (df_in["invoice_quantity"] - df_in["total_item_quantity"]).abs()
-    df_in["freight_ratio"] = df_in["Freight"] / (df_in["invoice_dollars"] + 1e-5)
-    df_in["dollar_diff_ratio"] = df_in["dollar_discrepancy"] / (df_in["total_item_dollars"] + 1e-5)
+    df_in["freight_ratio"] = (df_in["Freight"] / (df_in["invoice_dollars"] + 1e-5)).round(4)
+    df_in["dollar_diff_ratio"] = (df_in["dollar_discrepancy"] / (df_in["total_item_dollars"] + 1e-5)).round(4)
 
     X = df_in[FEATURE_COLS]
     X_scaled = scaler.transform(X)
@@ -102,24 +107,40 @@ def predict_invoice_flag(
     ml_flags = model.predict(X_scaled)
     ml_probs = model.predict_proba(X_scaled)[:, 1]
 
-    # Hybrid Rule Engine Override (Deterministic Hard Flags)
+    # Multi-Factor Risk Assessment Engine
     final_flags = []
     final_probs = []
+    risk_reasons_list = []
 
     for idx, row in df_in.iterrows():
-        # Hard Rule 1: Dollar Discrepancy > $5
-        # Hard Rule 2: Quantity Discrepancy > 0
-        if row["dollar_discrepancy"] > 5 or row["qty_discrepancy"] > 0:
+        reasons = []
+        d_disc = row["dollar_discrepancy"]
+        q_disc = row["qty_discrepancy"]
+        prob = float(ml_probs[idx])
+
+        if d_disc > dollar_tolerance:
+            reasons.append(f"Price Discrepancy (${d_disc:,.2f} > ${dollar_tolerance:,.2f})")
+        if q_disc > 0:
+            reasons.append(f"Quantity Mismatch ({int(q_disc)} units)")
+        if row["days_po_to_invoice"] > 15:
+            reasons.append(f"PO Delay ({int(row['days_po_to_invoice'])} days)")
+        if prob >= prob_cutoff and not reasons:
+            reasons.append(f"ML Anomaly Score ({prob:.1%} >= {prob_cutoff:.1%})")
+
+        if reasons:
             final_flags.append(1)
-            final_probs.append(1.0)
+            final_probs.append(max(prob, 1.0 if d_disc > dollar_tolerance or q_disc > 0 else prob))
+            risk_reasons_list.append("; ".join(reasons))
         else:
-            final_flags.append(int(ml_flags[idx]))
-            final_probs.append(float(ml_probs[idx]))
+            final_flags.append(0)
+            final_probs.append(prob)
+            risk_reasons_list.append("None (All Audit Rules Passed)")
 
     result = df_in.copy()
     result["flag_invoice"]     = final_flags
     result["flag_probability"] = [round(p, 3) for p in final_probs]
-    result["decision"] = result["flag_invoice"].map(
+    result["risk_reasons"]     = risk_reasons_list
+    result["decision"]         = result["flag_invoice"].map(
         {1: "[FLAG]    Manual Review Required",
          0: "[APPROVE] Auto-process"}
     )
@@ -128,25 +149,19 @@ def predict_invoice_flag(
 
 def main() -> None:
     print("=" * 60)
-    print("  Invoice Risk Flagging — Inference Demo (Hybrid Architecture)")
+    print("  Invoice Risk Flagging — Multi-Factor Risk Audit Demo")
     print("=" * 60)
 
-    # Perfect sample invoice test
     sample_data = {
         "invoice_quantity":    [6,      15,     10100],
-        "invoice_dollars":     [214.26, 140.55, 137483],
-        "Freight":             [3.47,   8.57,   2935.2],
+        "invoice_dollars":     [214.26, 1850.00, 137483],
+        "Freight":             [3.47,   45.00,   2935.2],
         "total_item_quantity": [6,      15,     10100],
-        "total_item_dollars":  [214.26, 140.55, 1000],
+        "total_item_dollars":  [214.26, 1200.00, 1000],
     }
 
     result = predict_invoice_flag(**sample_data)
-
-    print("Predictions:")
-    print("-" * 60)
-    display_cols = ["invoice_dollars", "Freight", "flag_invoice", "flag_probability", "decision"]
-    print(result[display_cols].to_string(index=False))
-    print("-" * 60)
+    print(result[["invoice_dollars", "total_item_dollars", "flag_invoice", "decision", "risk_reasons"]].to_string(index=False))
 
 
 if __name__ == "__main__":
