@@ -1096,14 +1096,14 @@ elif page == "Invoice Risk Flagging":
 
         if uploaded is not None:
             try:
-                df_input = pd.read_csv(uploaded)
+                df_input = pd.read_csv(uploaded, on_bad_lines="skip")
                 required_cols = [
                     "invoice_quantity", "invoice_dollars", "Freight",
                     "total_item_quantity", "total_item_dollars",
                 ]
                 missing = [c for c in required_cols if c not in df_input.columns]
                 if missing:
-                    st.error(f"Missing required columns: {missing}")
+                    st.error(f"Missing required columns in CSV: {missing}")
                 else:
                     with st.spinner("Running batch classification..."):
                         results = predict_invoice_flag(
