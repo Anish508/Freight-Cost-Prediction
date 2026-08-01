@@ -194,12 +194,81 @@ st.markdown(
         border: 1px solid #e2e8f0;
     }
 
-    /* ---- Input labels & Text ---- */
+    /* ---- Form Inputs & Fields Visibility ---- */
     label {
-        font-size: 0.92rem !important;
+        font-size: 0.95rem !important;
+        font-weight: 700 !important;
+        color: #0f172a !important;
+        margin-bottom: 0.4rem !important;
+    }
+
+    div[data-baseweb="input"], 
+    div[data-baseweb="base-input"],
+    input[type="number"], 
+    textarea {
+        background-color: #ffffff !important;
+        border: 1.5px solid #94a3b8 !important;
+        border-radius: 8px !important;
+        color: #0f172a !important;
         font-weight: 600 !important;
-        color: #1e293b !important;
-        margin-bottom: 0.3rem !important;
+        font-size: 1rem !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+    }
+
+    div[data-baseweb="input"]:focus-within,
+    textarea:focus {
+        border-color: #2563eb !important;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2) !important;
+    }
+
+    /* ---- Highlight Boxes & Callouts ---- */
+    .highlight-box {
+        background: #f8fafc;
+        border-left: 4px solid #2563eb;
+        border-radius: 8px;
+        padding: 1.1rem 1.3rem;
+        margin: 1rem 0;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+    .highlight-box strong {
+        color: #0f172a;
+        font-weight: 700;
+    }
+
+    .highlight-warning {
+        background: #fffbeb;
+        border: 1.5px solid #fde68a;
+        border-left: 5px solid #d97706;
+        border-radius: 8px;
+        padding: 0.9rem 1.2rem;
+        color: #92400e;
+        font-weight: 600;
+        font-size: 0.92rem;
+        margin-top: 0.8rem;
+    }
+
+    .highlight-success {
+        background: #f0fdf4;
+        border: 1.5px solid #bbf7d0;
+        border-left: 5px solid #16a34a;
+        border-radius: 8px;
+        padding: 0.9rem 1.2rem;
+        color: #166534;
+        font-weight: 600;
+        font-size: 0.92rem;
+        margin-top: 0.8rem;
+    }
+
+    .highlight-danger {
+        background: #fef2f2;
+        border: 1.5px solid #fecaca;
+        border-left: 5px solid #dc2626;
+        border-radius: 8px;
+        padding: 0.9rem 1.2rem;
+        color: #991b1b;
+        font-weight: 600;
+        font-size: 0.92rem;
+        margin-top: 0.8rem;
     }
 
     /* ---- Buttons ---- */
@@ -208,18 +277,18 @@ st.markdown(
         color: #ffffff;
         border: none;
         border-radius: 10px;
-        padding: 0.7rem 1.8rem;
-        font-size: 0.98rem;
+        padding: 0.75rem 1.8rem;
+        font-size: 1rem;
         font-weight: 700;
         letter-spacing: 0.01em;
         width: 100%;
-        box-shadow: 0 2px 4px rgba(30, 58, 95, 0.15);
+        box-shadow: 0 2px 5px rgba(30, 58, 95, 0.2);
         transition: all 0.2s ease;
     }
     .stButton > button:hover {
         background: #2563eb;
         color: #ffffff;
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
     }
 
     /* Hide Streamlit default header elements */
