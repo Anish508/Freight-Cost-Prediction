@@ -11,7 +11,7 @@ from model_evaluation import (
     train_linear_regression,
     train_decision_tree,
     train_random_forest,
-    evaluate_model
+    evaluate_regression_model
 )
 
 
@@ -32,10 +32,10 @@ def main():
     dt_model = train_decision_tree(X_train, y_train)
     rf_model = train_random_forest(X_train, y_train)
 
-    # Evaluate models
+    # Evaluate models (regression metrics: MAE, RMSE, R²)
     results = []
     results.append(
-        evaluate_model(
+        evaluate_regression_model(
             lr_model,
             X_test,
             y_test,
@@ -43,7 +43,7 @@ def main():
         )
     )
     results.append(
-        evaluate_model(
+        evaluate_regression_model(
             dt_model,
             X_test,
             y_test,
@@ -51,7 +51,7 @@ def main():
         )
     )
     results.append(
-        evaluate_model(
+        evaluate_regression_model(
             rf_model,
             X_test,
             y_test,
