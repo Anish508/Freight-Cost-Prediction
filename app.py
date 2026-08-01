@@ -194,12 +194,28 @@ st.markdown(
         border: 1px solid #e2e8f0;
     }
 
-    /* ---- Form Inputs & Fields Visibility ---- */
-    label {
+    /* ---- Form Inputs & Label Visibility Fix ---- */
+    label,
+    label p,
+    [data-testid="stWidgetLabel"],
+    [data-testid="stWidgetLabel"] p,
+    [data-testid="stWidgetLabel"] label,
+    div[class*="stNumberInput"] label *,
+    div[class*="stTextInput"] label *,
+    div[class*="stTextArea"] label *,
+    div[class*="stSelectbox"] label * {
         font-size: 0.95rem !important;
         font-weight: 700 !important;
         color: #0f172a !important;
-        margin-bottom: 0.4rem !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        margin-bottom: 0.35rem !important;
+    }
+
+    [data-testid="stSidebar"] label,
+    [data-testid="stSidebar"] label p,
+    [data-testid="stSidebar"] [data-testid="stWidgetLabel"] * {
+        color: #f8fafc !important;
     }
 
     div[data-baseweb="input"], 
@@ -290,6 +306,10 @@ st.markdown(
         color: #ffffff;
         box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
     }
+
+    /* Hide Streamlit default header elements */
+    #MainMenu { visibility: hidden; }
+    footer { visibility: hidden; }
 
     /* ---- Professional Sidebar Styling & Navigation ---- */
     [data-testid="stSidebar"] {
@@ -452,6 +472,10 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+# Initialize Session State Navigation
+if "nav_page" not in st.session_state:
+    st.session_state["nav_page"] = "Overview"
+
 # ---------------------------------------------------------------------------
 # Sidebar navigation
 # ---------------------------------------------------------------------------
@@ -469,6 +493,7 @@ with st.sidebar:
     page = st.radio(
         "Navigation",
         options=["Overview", "Freight Cost Prediction", "Invoice Risk Flagging"],
+        key="nav_page",
         label_visibility="collapsed",
     )
 
@@ -527,6 +552,20 @@ if page == "Overview":
         """,
         unsafe_allow_html=True,
     )
+
+    # Overview Quick Action Navigation Section
+    st.markdown("<div class='section-header'>Quick Actions — Try ML Features</div>", unsafe_allow_html=True)
+    act_col1, act_col2 = st.columns(2, gap="large")
+    with act_col1:
+        if st.button("Launch Freight Cost Predictor →", key="launch_freight_btn"):
+            st.session_state["nav_page"] = "Freight Cost Prediction"
+            st.rerun()
+    with act_col2:
+        if st.button("Launch Invoice Risk Classifier →", key="launch_flagging_btn"):
+            st.session_state["nav_page"] = "Invoice Risk Flagging"
+            st.rerun()
+
+    st.markdown("<br>", unsafe_allow_html=True)
 
     overview_tabs = st.tabs([
         "Project Executive Summary",
