@@ -472,6 +472,10 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+# Navigation callback function
+def set_page(target_page: str):
+    st.session_state["nav_page"] = target_page
+
 # Initialize Session State Navigation
 if "nav_page" not in st.session_state:
     st.session_state["nav_page"] = "Overview"
@@ -557,13 +561,19 @@ if page == "Overview":
     st.markdown("<div class='section-header'>Quick Actions — Try ML Features</div>", unsafe_allow_html=True)
     act_col1, act_col2 = st.columns(2, gap="large")
     with act_col1:
-        if st.button("Launch Freight Cost Predictor →", key="launch_freight_btn"):
-            st.session_state["nav_page"] = "Freight Cost Prediction"
-            st.rerun()
+        st.button(
+            "Launch Freight Cost Predictor →",
+            key="launch_freight_btn",
+            on_click=set_page,
+            args=("Freight Cost Prediction",),
+        )
     with act_col2:
-        if st.button("Launch Invoice Risk Classifier →", key="launch_flagging_btn"):
-            st.session_state["nav_page"] = "Invoice Risk Flagging"
-            st.rerun()
+        st.button(
+            "Launch Invoice Risk Classifier →",
+            key="launch_flagging_btn",
+            on_click=set_page,
+            args=("Invoice Risk Flagging",),
+        )
 
     st.markdown("<br>", unsafe_allow_html=True)
 
