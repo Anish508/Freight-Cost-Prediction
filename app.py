@@ -173,25 +173,38 @@ st.markdown(
         line-height: 1.3;
     }
 
-    /* ---- Streamlit Tabs Typography ---- */
+    /* ---- Streamlit Main Container Theme ---- */
+    .main, [data-testid="stAppViewContainer"] {
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+    }
+
+    /* ---- Tabs Typography & High Contrast Visibility ---- */
+    .stTabs [data-baseweb="tab-list"] {
+        background-color: #f8fafc !important;
+        border-radius: 8px !important;
+        padding: 0.3rem 0.4rem !important;
+        border: 1px solid #e2e8f0 !important;
+    }
     .stTabs [data-baseweb="tab-list"] button {
         font-size: 1rem !important;
-        font-weight: 600 !important;
-        padding: 0.6rem 1.2rem !important;
+        font-weight: 700 !important;
+        padding: 0.6rem 1.3rem !important;
+        border-radius: 6px !important;
+        background: transparent !important;
     }
-
-    /* ---- Divider ---- */
-    hr {
-        border: none;
-        border-top: 1px solid #e2e8f0;
-        margin: 1.8rem 0;
+    .stTabs [data-baseweb="tab-list"] button * {
+        color: #334155 !important;
+        font-weight: 700 !important;
+        opacity: 1 !important;
     }
-
-    /* ---- Dataframe ---- */
-    [data-testid="stDataFrame"] {
-        border-radius: 10px;
-        overflow: hidden;
-        border: 1px solid #e2e8f0;
+    .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] {
+        background-color: #ffffff !important;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.06) !important;
+    }
+    .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] * {
+        color: #2563eb !important;
+        font-weight: 800 !important;
     }
 
     /* ---- Form Inputs & Label Visibility Fix ---- */
@@ -203,13 +216,14 @@ st.markdown(
     div[class*="stNumberInput"] label *,
     div[class*="stTextInput"] label *,
     div[class*="stTextArea"] label *,
-    div[class*="stSelectbox"] label * {
-        font-size: 0.95rem !important;
+    div[class*="stSelectbox"] label *,
+    div[class*="stFileUploader"] label * {
+        font-size: 0.98rem !important;
         font-weight: 700 !important;
         color: #0f172a !important;
         opacity: 1 !important;
         visibility: visible !important;
-        margin-bottom: 0.35rem !important;
+        margin-bottom: 0.4rem !important;
     }
 
     [data-testid="stSidebar"] label,
