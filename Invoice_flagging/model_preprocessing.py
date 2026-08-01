@@ -7,10 +7,6 @@ def load_data(db_path: str) -> pd.DataFrame:
     """
     Connect to the SQLite database and load the merged vendor invoice
     + purchase aggregation dataset into a DataFrame.
-
-    The query joins vendor_invoice with an aggregated purchases CTE to
-    produce one row per PO-invoice, enriched with item-level totals and
-    an average receiving delay.
     """
     conn = sqlite3.connect(db_path)
 
@@ -51,21 +47,44 @@ def load_data(db_path: str) -> pd.DataFrame:
     return df
 
 
+def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Generate explicit delta and ratio features required for non-linear tree splits:
+      - dollar_discrepancy : abs(invoice_dollars - total_item_dollars)
+      - qty_discrepancy    : abs(invoice_quantity - total_item_quantity)
+      - freight_ratio      : Freight / (invoice_dollars + 1e-5)
+      - dollar_diff_ratio  : dollar_discrepancy / (total_item_dollars + 1e-5)
+    """
+    df = df.copy()
+
+    # Fill NA values gracefully
+    df["total_item_dollars"] = df["total_item_dollars"].fillna(df["invoice_dollars"])
+    df["total_item_quantity"] = df["total_item_quantity"].fillna(df["invoice_quantity"])
+    df["days_po_to_invoice"] = df["days_po_to_invoice"].fillna(0.0)
+
+    # Engineered delta features
+    df["dollar_discrepancy"] = (df["invoice_dollars"] - df["total_item_dollars"]).abs()
+    df["qty_discrepancy"] = (df["invoice_quantity"] - df["total_item_quantity"]).abs()
+    df["freight_ratio"] = df["Freight"] / (df["invoice_dollars"] + 1e-5)
+    df["dollar_diff_ratio"] = df["dollar_discrepancy"] / (df["total_item_dollars"] + 1e-5)
+
+    return df
+
+
 def create_invoice_risk_label(row) -> int:
     """
-    Rule-based binary label for invoice risk.
+    Cleaned Ground Truth Risk Label Generator.
 
-    Returns 1 (flag for manual review) when:
-      - The invoice-level dollar total differs from the item-level total by > $5, OR
-      - The average receiving delay is abnormally high (> 10 days).
-    Returns 0 otherwise.
+    Targeting Risk Indicators Available at Inference Time:
+      1. Dollar Discrepancy > $5
+      2. Quantity Discrepancy > 0
+      3. PO-to-Invoice Delay > 15 days
     """
-    # Invoice total mismatch with item-level total
-    if abs(row["invoice_dollars"] - row["total_item_dollars"]) > 5:
+    if row["dollar_discrepancy"] > 5:
         return 1
-
-    # Abnormally high receiving delay
-    if row["avg_receiving_delay"] > 10:
+    if row["qty_discrepancy"] > 0:
+        return 1
+    if row["days_po_to_invoice"] > 15:
         return 1
 
     return 0
@@ -73,10 +92,9 @@ def create_invoice_risk_label(row) -> int:
 
 def add_risk_label(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Apply `create_invoice_risk_label` row-wise and store the result in a
-    new column called ``flag_invoice``.
+    Apply feature engineering and `create_invoice_risk_label` row-wise.
     """
-    df = df.copy()
+    df = engineer_features(df)
     df["flag_invoice"] = df.apply(create_invoice_risk_label, axis=1)
     return df
 
@@ -88,20 +106,7 @@ def select_significant_features(
     alpha: float = 0.05,
 ) -> tuple[list[str], list[str]]:
     """
-    Run a Welch two-sample t-test for each candidate feature between the
-    flagged and non-flagged groups.
-
-    Parameters
-    ----------
-    df                  : DataFrame that already contains the target column.
-    candidate_features  : Feature names to test.
-    target              : Binary target column (0 / 1).
-    alpha               : Significance threshold (default 0.05).
-
-    Returns
-    -------
-    significant_features     : Features where p-value < alpha.
-    non_significant_features : Remaining features.
+    Run a Welch two-sample t-test for each candidate feature.
     """
     flagged = df[df[target] == 1]
     normal = df[df[target] == 0]
@@ -110,6 +115,8 @@ def select_significant_features(
     non_significant_features: list[str] = []
 
     for metric in candidate_features:
+        if metric not in df.columns:
+            continue
         _, p_value = ttest_ind(
             flagged[metric].dropna(),
             normal[metric].dropna(),
@@ -131,18 +138,6 @@ def prepare_features(
 ):
     """
     Split the DataFrame into feature matrix X and target vector y.
-
-    Parameters
-    ----------
-    df           : Labelled DataFrame (must already have ``flag_invoice``).
-    feature_cols : Columns to use as predictors.  Defaults to the five
-                   most important features identified during EDA.
-    target_col   : Name of the binary target column.
-
-    Returns
-    -------
-    X : pd.DataFrame
-    y : pd.Series
     """
     if feature_cols is None:
         feature_cols = [
@@ -151,6 +146,11 @@ def prepare_features(
             "Freight",
             "total_item_quantity",
             "total_item_dollars",
+            "dollar_discrepancy",
+            "qty_discrepancy",
+            "freight_ratio",
+            "dollar_diff_ratio",
+            "days_po_to_invoice",
         ]
 
     X = df[feature_cols]
