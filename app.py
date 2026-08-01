@@ -1166,12 +1166,17 @@ elif page == "Invoice Risk Flagging":
                         "decision":            "Decision",
                     })
 
+                    # Highlight flagged rows with backwards-compatible Styler method
+                    styler = display_results.style
+                    map_method = getattr(styler, "map", getattr(styler, "applymap", None))
+                    styled_results = map_method(
+                        lambda v: "background-color:#fee2e2;color:#991b1b;"
+                        if v == 1 else "background-color:#dcfce7;color:#166534;",
+                        subset=["Flag"],
+                    )
+
                     st.dataframe(
-                        display_results.style.applymap(
-                            lambda v: "background-color:#fee2e2;color:#991b1b;"
-                            if v == 1 else "background-color:#dcfce7;color:#166534;",
-                            subset=["Flag"],
-                        ),
+                        styled_results,
                         use_container_width=True,
                         hide_index=True,
                     )
