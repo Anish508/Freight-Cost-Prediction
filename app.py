@@ -296,9 +296,21 @@ st.markdown(
         background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%) !important;
         border-right: 1px solid #334155 !important;
     }
-    [data-testid="stSidebar"] * {
+    [data-testid="stSidebar"] p,
+    [data-testid="stSidebar"] label,
+    [data-testid="stSidebar"] .stMarkdown,
+    [data-testid="stSidebar"] .sidebar-brand-card,
+    [data-testid="stSidebar"] .sidebar-status-card {
         color: #f8fafc !important;
-        font-family: 'Inter', sans-serif;
+        font-family: 'Inter', sans-serif !important;
+    }
+
+    /* Fix Streamlit Icon Font for Sidebar Collapse Button */
+    [data-testid="stSidebarHeader"] *,
+    [data-testid="stSidebarCollapseButton"] *,
+    button[aria-label*="sidebar"] *,
+    span[data-testid="stHeaderIcon"] {
+        font-family: 'Material Symbols Rounded', 'Material Symbols Outlined', 'Material Icons', sans-serif !important;
     }
 
     /* Sidebar Navigation Radio Styling */
