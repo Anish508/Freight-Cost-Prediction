@@ -291,9 +291,90 @@ st.markdown(
         box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
     }
 
-    /* Hide Streamlit default header elements */
-    #MainMenu { visibility: hidden; }
-    footer { visibility: hidden; }
+    /* ---- Professional Sidebar Styling & Navigation ---- */
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%) !important;
+        border-right: 1px solid #334155 !important;
+    }
+    [data-testid="stSidebar"] * {
+        color: #f8fafc !important;
+        font-family: 'Inter', sans-serif;
+    }
+
+    /* Sidebar Navigation Radio Styling */
+    [data-testid="stSidebar"] .stRadio label {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 8px !important;
+        padding: 0.65rem 1rem !important;
+        margin-bottom: 0.5rem !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+    [data-testid="stSidebar"] .stRadio label:hover {
+        background: rgba(255, 255, 255, 0.08) !important;
+        border-color: rgba(255, 255, 255, 0.2) !important;
+        transform: translateX(2px);
+    }
+    [data-testid="stSidebar"] .stRadio label[data-checked="true"] {
+        background: #2563eb !important;
+        border-color: #3b82f6 !important;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3) !important;
+    }
+    [data-testid="stSidebar"] .stRadio label[data-checked="true"] div {
+        color: #ffffff !important;
+        font-weight: 700 !important;
+    }
+
+    /* Sidebar Card Containers */
+    .sidebar-brand-card {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 10px;
+        padding: 1.2rem 1.1rem;
+        margin-bottom: 1.5rem;
+    }
+    .sidebar-brand-title {
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: #ffffff;
+        letter-spacing: -0.01em;
+        margin-bottom: 0.2rem;
+    }
+    .sidebar-brand-sub {
+        font-size: 0.78rem;
+        color: #94a3b8;
+        font-weight: 500;
+    }
+
+    .sidebar-status-card {
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 8px;
+        padding: 0.9rem;
+        margin-top: 1.2rem;
+        font-size: 0.8rem;
+    }
+    .sidebar-status-header {
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #94a3b8;
+        margin-bottom: 0.5rem;
+    }
+    .sidebar-status-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.3rem;
+        color: #e2e8f0;
+    }
+    .sidebar-status-item span {
+        color: #38bdf8;
+        font-weight: 600;
+    }
 
     /* ---- Mobile Responsiveness & Scaled Typography ---- */
     @media screen and (max-width: 768px) {
@@ -364,13 +445,14 @@ st.markdown(
 # ---------------------------------------------------------------------------
 with st.sidebar:
     st.markdown(
-        "<div style='margin-bottom:1.2rem;'>"
-        "<div style='font-size:1.05rem;font-weight:700;color:#f1f5f9;'>PDS Project</div>"
-        "<div style='font-size:0.78rem;color:#94a3b8;'>Procurement Analytics</div>"
-        "</div>",
+        """
+        <div class="sidebar-brand-card">
+            <div class="sidebar-brand-title">Procurement Analytics</div>
+            <div class="sidebar-brand-sub">Enterprise AI System • v1.0</div>
+        </div>
+        """,
         unsafe_allow_html=True,
     )
-    st.markdown("---")
 
     page = st.radio(
         "Navigation",
@@ -378,13 +460,15 @@ with st.sidebar:
         label_visibility="collapsed",
     )
 
-    st.markdown("---")
     st.markdown(
-        "<div style='font-size:0.75rem;color:#64748b;'>"
-        "Models<br>"
-        "<span style='color:#94a3b8;'>Random Forest Regressor</span><br>"
-        "<span style='color:#94a3b8;'>Random Forest Classifier</span>"
-        "</div>",
+        """
+        <div class="sidebar-status-card">
+            <div class="sidebar-status-header">System Health & Engine</div>
+            <div class="sidebar-status-item">Engine: <span>Random Forest</span></div>
+            <div class="sidebar-status-item">Models Loaded: <span>2 Active</span></div>
+            <div class="sidebar-status-item">Status: <span>Online</span></div>
+        </div>
+        """,
         unsafe_allow_html=True,
     )
 
