@@ -186,6 +186,45 @@ st.markdown(
     /* Hide Streamlit default header elements */
     #MainMenu { visibility: hidden; }
     footer { visibility: hidden; }
+
+    /* ---- Mobile Responsiveness ---- */
+    @media screen and (max-width: 768px) {
+        .main .block-container {
+            padding: 1rem 0.5rem 2rem 0.5rem !important;
+        }
+        .page-banner {
+            padding: 1.2rem 1rem !important;
+            margin-bottom: 1.2rem !important;
+        }
+        .page-banner h1 {
+            font-size: 1.35rem !important;
+        }
+        .page-banner p {
+            font-size: 0.85rem !important;
+        }
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 0.6rem !important;
+        }
+        .metric-card {
+            padding: 0.9rem 0.8rem !important;
+        }
+        .metric-card .value {
+            font-size: 1.4rem !important;
+        }
+        .metric-card .label {
+            font-size: 0.7rem !important;
+        }
+        .section-header {
+            font-size: 0.95rem !important;
+            margin: 1.2rem 0 0.7rem 0 !important;
+        }
+    }
+    @media screen and (max-width: 480px) {
+        .stats-grid {
+            grid-template-columns: 1fr !important;
+        }
+    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -238,7 +277,7 @@ if page == "Overview":
     # Key Statistics Bar
     st.markdown(
         """
-        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.8rem;">
+        <div class="stats-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.8rem;">
             <div class="metric-card">
                 <div class="label">Total Invoices Analyzed</div>
                 <div class="value">5,543</div>
@@ -268,7 +307,6 @@ if page == "Overview":
         "Project Executive Summary",
         "ML Modules & Architecture",
         "Dataset & Feature Engineering",
-        "Seminar & Presentation Guide",
     ])
 
     # ---- TAB 1: EXECUTIVE SUMMARY ----
@@ -358,7 +396,7 @@ if page == "Overview":
         st.markdown("<div class='section-header'>End-to-End System Pipeline</div>", unsafe_allow_html=True)
         st.markdown(
             """
-            <div style="background:#0f172a;color:#f8fafc;padding:1.2rem;border-radius:8px;font-family:monospace;font-size:0.83rem;line-height:1.8;">
+            <div style="background:#0f172a;color:#f8fafc;padding:1.2rem;border-radius:8px;font-family:monospace;font-size:0.83rem;line-height:1.8;overflow-x:auto;">
             [SQLite Data Source] -> [SQL Query & CTE Aggregations] -> [Welch t-Test Feature Selection]
                                                                                 |
                                                                                 v
@@ -435,41 +473,12 @@ if page == "Overview":
         ])
         st.dataframe(fi_df, use_container_width=True, hide_index=True)
 
-    # ---- TAB 4: SEMINAR & PRESENTATION GUIDE ----
-    with overview_tabs[3]:
-        st.markdown("<div class='section-header'>Key Talking Points for Seminars / Demonstrations</div>", unsafe_allow_html=True)
-        
-        st.markdown(
-            """
-            1. <strong>Project Objective:</strong> Demonstrate how machine learning turns raw procurement and inventory databases into actionable risk insights and automated financial controls.
-            2. <strong>Key Highlight (94% Precision):</strong> Emphasize that when the risk classifier flags an invoice, it is correct 94% of the time. This minimizes false alarms and builds trust with financial auditors.
-            3. <strong>Data Integration:</strong> Explain that invoice data alone is insufficient; by executing SQL Common Table Expressions (CTEs) to join invoice headers with item-level purchase records, the model detects subtle dollar and quantity mismatches.
-            4. <strong>Deployment Ready:</strong> Show that the system is fully modularized with training pipelines (`train.py`), reusable inference APIs (`Inference/`), and an interactive Streamlit UI.
-            """,
-            unsafe_allow_html=True,
-        )
-
-        st.markdown("<div class='section-header'>Deployment Commands</div>", unsafe_allow_html=True)
-        st.code(
-            """
-# 1. Install Dependencies
-pip install -r requirements.txt
-
-# 2. Run Main Streamlit Application
-streamlit run app.py
-
-# 3. Retrain Models (Optional)
-python Invoice_flagging/train.py
-python Freight_cost_prediction/train.py
-            """,
-            language="bash",
-        )
-
     st.markdown("<hr>", unsafe_allow_html=True)
     st.markdown(
         "<div style='font-size:0.82rem;color:#94a3b8;'>Use the sidebar to navigate to a prediction module.</div>",
         unsafe_allow_html=True,
     )
+
 
 
 
