@@ -42,187 +42,247 @@ st.markdown(
     """
     <style>
     /* ---- Typography & base ---- */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
     html, body, [class*="css"] {
-        font-family: 'Inter', sans-serif;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        font-size: 16px;
+        color: #1e293b;
+        -webkit-font-smoothing: antialiased;
     }
 
-    /* ---- Sidebar ---- */
+    p, span, div {
+        line-height: 1.6;
+    }
+
+    /* ---- Sidebar Typography & Styling ---- */
     [data-testid="stSidebar"] {
         background: #0f172a;
     }
     [data-testid="stSidebar"] * {
         color: #e2e8f0 !important;
+        font-family: 'Inter', sans-serif;
     }
     [data-testid="stSidebar"] .st-emotion-cache-1544g2n {
-        padding-top: 1.5rem;
+        padding-top: 1.8rem;
+    }
+    [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {
+        font-size: 0.92rem !important;
     }
 
-    /* ---- Main background ---- */
+    /* ---- Main Container ---- */
     .main .block-container {
-        padding-top: 2rem;
-        padding-bottom: 3rem;
-        max-width: 1100px;
+        padding-top: 2.2rem;
+        padding-bottom: 3.5rem;
+        max-width: 1120px;
     }
 
     /* ---- Page title banner ---- */
     .page-banner {
         background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
-        border-radius: 10px;
-        padding: 1.8rem 2rem;
-        margin-bottom: 1.8rem;
+        border-radius: 12px;
+        padding: 2.2rem 2.4rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
     }
     .page-banner h1 {
-        color: #f1f5f9;
-        font-size: 1.75rem;
-        font-weight: 700;
-        margin: 0 0 0.3rem 0;
+        color: #ffffff;
+        font-size: 2.1rem;
+        font-weight: 800;
+        letter-spacing: -0.025em;
+        line-height: 1.25;
+        margin: 0 0 0.5rem 0;
     }
     .page-banner p {
-        color: #94a3b8;
-        font-size: 0.95rem;
+        color: #cbd5e1;
+        font-size: 1.05rem;
+        font-weight: 400;
+        line-height: 1.5;
         margin: 0;
     }
 
-    /* ---- Cards ---- */
+    /* ---- Metric Cards ---- */
     .metric-card {
         background: #ffffff;
         border: 1px solid #e2e8f0;
-        border-radius: 10px;
-        padding: 1.4rem 1.6rem;
+        border-radius: 12px;
+        padding: 1.5rem 1.6rem;
         text-align: center;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .metric-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.08);
     }
     .metric-card .label {
-        font-size: 0.78rem;
-        font-weight: 600;
-        color: #64748b;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: #475569;
         text-transform: uppercase;
-        letter-spacing: 0.06em;
-        margin-bottom: 0.4rem;
+        letter-spacing: 0.08em;
+        margin-bottom: 0.45rem;
     }
     .metric-card .value {
-        font-size: 1.9rem;
-        font-weight: 700;
+        font-size: 2.1rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
         color: #0f172a;
+        line-height: 1.2;
     }
     .metric-card .sub {
-        font-size: 0.8rem;
-        color: #94a3b8;
-        margin-top: 0.2rem;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: #64748b;
+        margin-top: 0.35rem;
     }
 
     /* ---- Result badges ---- */
     .badge-approve {
         display: inline-block;
         background: #dcfce7;
-        color: #166534;
+        color: #15803d;
         border: 1px solid #bbf7d0;
-        border-radius: 6px;
-        padding: 0.35rem 0.85rem;
-        font-size: 0.85rem;
-        font-weight: 600;
+        border-radius: 8px;
+        padding: 0.45rem 1.1rem;
+        font-size: 0.95rem;
+        font-weight: 700;
+        letter-spacing: 0.01em;
     }
     .badge-flag {
         display: inline-block;
         background: #fee2e2;
-        color: #991b1b;
+        color: #b91c1c;
         border: 1px solid #fecaca;
-        border-radius: 6px;
-        padding: 0.35rem 0.85rem;
-        font-size: 0.85rem;
-        font-weight: 600;
+        border-radius: 8px;
+        padding: 0.45rem 1.1rem;
+        font-size: 0.95rem;
+        font-weight: 700;
+        letter-spacing: 0.01em;
     }
 
     /* ---- Section headers ---- */
     .section-header {
-        font-size: 1.05rem;
-        font-weight: 600;
-        color: #1e293b;
-        border-left: 4px solid #3b82f6;
-        padding-left: 0.7rem;
-        margin: 1.5rem 0 0.9rem 0;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #0f172a;
+        letter-spacing: -0.015em;
+        border-left: 4px solid #2563eb;
+        padding-left: 0.85rem;
+        margin: 1.8rem 0 1.1rem 0;
+        line-height: 1.3;
+    }
+
+    /* ---- Streamlit Tabs Typography ---- */
+    .stTabs [data-baseweb="tab-list"] button {
+        font-size: 1rem !important;
+        font-weight: 600 !important;
+        padding: 0.6rem 1.2rem !important;
     }
 
     /* ---- Divider ---- */
     hr {
         border: none;
         border-top: 1px solid #e2e8f0;
-        margin: 1.5rem 0;
+        margin: 1.8rem 0;
     }
 
     /* ---- Dataframe ---- */
     [data-testid="stDataFrame"] {
-        border-radius: 8px;
+        border-radius: 10px;
         overflow: hidden;
         border: 1px solid #e2e8f0;
     }
 
-    /* ---- Input labels ---- */
+    /* ---- Input labels & Text ---- */
     label {
-        font-size: 0.85rem !important;
-        font-weight: 500 !important;
-        color: #374151 !important;
+        font-size: 0.92rem !important;
+        font-weight: 600 !important;
+        color: #1e293b !important;
+        margin-bottom: 0.3rem !important;
     }
 
     /* ---- Buttons ---- */
     .stButton > button {
         background: #1e3a5f;
-        color: #f1f5f9;
+        color: #ffffff;
         border: none;
-        border-radius: 8px;
-        padding: 0.55rem 1.8rem;
-        font-size: 0.9rem;
-        font-weight: 600;
+        border-radius: 10px;
+        padding: 0.7rem 1.8rem;
+        font-size: 0.98rem;
+        font-weight: 700;
+        letter-spacing: 0.01em;
         width: 100%;
-        transition: background 0.2s ease;
+        box-shadow: 0 2px 4px rgba(30, 58, 95, 0.15);
+        transition: all 0.2s ease;
     }
     .stButton > button:hover {
-        background: #2d5a9e;
+        background: #2563eb;
         color: #ffffff;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
     }
 
     /* Hide Streamlit default header elements */
     #MainMenu { visibility: hidden; }
     footer { visibility: hidden; }
 
-    /* ---- Mobile Responsiveness ---- */
+    /* ---- Mobile Responsiveness & Scaled Typography ---- */
     @media screen and (max-width: 768px) {
+        html, body, [class*="css"] {
+            font-size: 15px;
+        }
         .main .block-container {
-            padding: 1rem 0.5rem 2rem 0.5rem !important;
+            padding: 1rem 0.6rem 2.2rem 0.6rem !important;
         }
         .page-banner {
-            padding: 1.2rem 1rem !important;
-            margin-bottom: 1.2rem !important;
+            padding: 1.4rem 1.2rem !important;
+            margin-bottom: 1.4rem !important;
+            border-radius: 10px !important;
         }
         .page-banner h1 {
-            font-size: 1.35rem !important;
+            font-size: 1.55rem !important;
+            line-height: 1.3 !important;
         }
         .page-banner p {
-            font-size: 0.85rem !important;
+            font-size: 0.92rem !important;
         }
         .stats-grid {
             grid-template-columns: repeat(2, 1fr) !important;
-            gap: 0.6rem !important;
+            gap: 0.75rem !important;
         }
         .metric-card {
-            padding: 0.9rem 0.8rem !important;
+            padding: 1rem 0.85rem !important;
+            border-radius: 10px !important;
         }
         .metric-card .value {
-            font-size: 1.4rem !important;
+            font-size: 1.6rem !important;
         }
         .metric-card .label {
-            font-size: 0.7rem !important;
+            font-size: 0.72rem !important;
         }
         .section-header {
-            font-size: 0.95rem !important;
-            margin: 1.2rem 0 0.7rem 0 !important;
+            font-size: 1.1rem !important;
+            margin: 1.4rem 0 0.8rem 0 !important;
+        }
+        .stButton > button {
+            padding: 0.65rem 1.4rem !important;
+            font-size: 0.92rem !important;
+        }
+        .stTabs [data-baseweb="tab-list"] button {
+            font-size: 0.88rem !important;
+            padding: 0.5rem 0.75rem !important;
         }
     }
+
     @media screen and (max-width: 480px) {
         .stats-grid {
             grid-template-columns: 1fr !important;
+        }
+        .page-banner h1 {
+            font-size: 1.4rem !important;
+        }
+        .metric-card .value {
+            font-size: 1.5rem !important;
         }
     }
     </style>
