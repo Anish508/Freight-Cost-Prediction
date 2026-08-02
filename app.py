@@ -55,8 +55,14 @@ st.markdown(
             box-sizing: border-box !important;
         }
 
-        /* High-Contrast Inputs & Labels */
-        label, [data-testid="stWidgetLabel"] p, .stNumberInput label, .stTextInput label, .stFileUploader label, .stSelectbox label {
+        /* High-Contrast Main Content Inputs & Labels (Scoped to main view) */
+        .main label, 
+        .main [data-testid="stWidgetLabel"] p, 
+        .main [data-testid="stWidgetLabel"] span,
+        .stNumberInput label, 
+        .stTextInput label, 
+        .stFileUploader label, 
+        .stSelectbox label {
             color: #0f172a !important;
             font-weight: 700 !important;
             font-size: 0.92rem !important;
@@ -104,7 +110,7 @@ st.markdown(
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
-        /* Sidebar Styling */
+        /* Sidebar Styling & High-Contrast White Text */
         [data-testid="stSidebar"] {
             background-color: #0f172a !important;
             border-right: 1px solid #1e293b !important;
@@ -114,7 +120,25 @@ st.markdown(
         [data-testid="stSidebar"] label,
         [data-testid="stSidebar"] span,
         [data-testid="stSidebar"] div {
-            color: #f8fafc;
+            color: #ffffff;
+        }
+
+        /* Explicit White Text for All Sidebar Labels & Widgets */
+        [data-testid="stSidebar"] label,
+        [data-testid="stSidebar"] label p,
+        [data-testid="stSidebar"] [data-testid="stWidgetLabel"],
+        [data-testid="stSidebar"] [data-testid="stWidgetLabel"] p,
+        [data-testid="stSidebar"] [data-testid="stWidgetLabel"] span,
+        [data-testid="stSidebar"] .stSlider label,
+        [data-testid="stSidebar"] .stSlider label p,
+        [data-testid="stSidebar"] .stSlider [data-testid="stWidgetLabel"] p,
+        [data-testid="stSidebar"] .stSlider [data-testid="stWidgetLabel"] span,
+        [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p,
+        [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] div {
+            color: #ffffff !important;
+            font-weight: 700 !important;
+            opacity: 1 !important;
+            visibility: visible !important;
         }
 
         .sidebar-brand-card {
@@ -140,7 +164,7 @@ st.markdown(
             margin-top: 0.2rem;
         }
 
-        /* FIX: Expander Hover Disappearing Issue in Sidebar */
+        /* FIX: Expander Hover & Content Visibility in Sidebar */
         [data-testid="stSidebar"] [data-testid="stExpander"] {
             background-color: #1e293b !important;
             border: 1px solid #334155 !important;
@@ -151,7 +175,7 @@ st.markdown(
 
         [data-testid="stSidebar"] [data-testid="stExpander"] summary {
             background-color: #1e293b !important;
-            color: #f8fafc !important;
+            color: #ffffff !important;
             font-weight: 700 !important;
             border-radius: 8px !important;
             padding: 0.75rem 1rem !important;
@@ -181,12 +205,7 @@ st.markdown(
             padding: 1rem !important;
         }
 
-        /* Sidebar Sliders & Tooltips */
-        [data-testid="stSidebar"] .stSlider label {
-            color: #cbd5e1 !important;
-            font-weight: 600 !important;
-        }
-
+        /* Sidebar Sliders & Tooltip Icons */
         [data-testid="stSidebar"] .stSlider [data-baseweb="slider"] {
             color: #38bdf8 !important;
         }
@@ -194,6 +213,11 @@ st.markdown(
         [data-testid="stSidebar"] .stSlider [role="slider"] {
             background-color: #38bdf8 !important;
             border: 2px solid #ffffff !important;
+        }
+
+        [data-testid="stSidebar"] [data-testid="stTooltipIcon"] svg {
+            fill: #94a3b8 !important;
+            color: #94a3b8 !important;
         }
 
         .sidebar-status-card {
