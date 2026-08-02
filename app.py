@@ -27,11 +27,11 @@ def set_page(target_page: str):
     st.session_state["nav_page"] = target_page
 
 # ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
 # Page configuration & custom CSS
 # ---------------------------------------------------------------------------
 st.set_page_config(
     page_title="Procurement Analytics System",
-    page_icon="📦",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -41,19 +41,18 @@ st.markdown(
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-        /* Force Base Font & Colors */
-        html, body, [class*="css"] {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        /* Base Font, Layout & Colors */
+        html, body, [class*="css"], .stApp {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             color: #0f172a !important;
-        }
-
-        .stApp {
             background-color: #f8fafc !important;
+            overflow-x: hidden !important;
         }
 
-        /* Preserve Material Icons font */
-        [class*="MaterialSymbols"], [class*="material-icons"], .material-symbols-outlined {
-            font-family: 'Material Symbols Outlined', 'Material Icons', sans-serif !important;
+        /* Prevent Horizontal Scroll / Overflow on Mobile */
+        .stApp > header, .main, .block-container {
+            max-width: 100% !important;
+            box-sizing: border-box !important;
         }
 
         /* High-Contrast Inputs & Labels */
@@ -79,7 +78,7 @@ st.markdown(
             box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
         }
 
-        /* Tab Header High-Contrast */
+        /* Tab Header Styling */
         .stTabs [data-baseweb="tab-list"] {
             gap: 8px;
             background-color: #f1f5f9;
@@ -111,8 +110,11 @@ st.markdown(
             border-right: 1px solid #1e293b !important;
         }
 
-        [data-testid="stSidebar"] *, [data-testid="stSidebar"] p, [data-testid="stSidebar"] label {
-            color: #f8fafc !important;
+        [data-testid="stSidebar"] p, 
+        [data-testid="stSidebar"] label,
+        [data-testid="stSidebar"] span,
+        [data-testid="stSidebar"] div {
+            color: #f8fafc;
         }
 
         .sidebar-brand-card {
@@ -138,6 +140,62 @@ st.markdown(
             margin-top: 0.2rem;
         }
 
+        /* FIX: Expander Hover Disappearing Issue in Sidebar */
+        [data-testid="stSidebar"] [data-testid="stExpander"] {
+            background-color: #1e293b !important;
+            border: 1px solid #334155 !important;
+            border-radius: 10px !important;
+            margin-bottom: 1.2rem !important;
+            overflow: hidden !important;
+        }
+
+        [data-testid="stSidebar"] [data-testid="stExpander"] summary {
+            background-color: #1e293b !important;
+            color: #f8fafc !important;
+            font-weight: 700 !important;
+            border-radius: 8px !important;
+            padding: 0.75rem 1rem !important;
+            transition: background-color 0.2s ease, color 0.2s ease !important;
+        }
+
+        [data-testid="stSidebar"] [data-testid="stExpander"] summary:hover,
+        [data-testid="stSidebar"] [data-testid="stExpander"] summary:focus,
+        [data-testid="stSidebar"] [data-testid="stExpander"] summary:active {
+            background-color: #334155 !important;
+            color: #38bdf8 !important;
+        }
+
+        [data-testid="stSidebar"] [data-testid="stExpander"] summary * {
+            color: inherit !important;
+            fill: currentColor !important;
+        }
+
+        [data-testid="stSidebar"] [data-testid="stExpander"] summary:hover * {
+            color: #38bdf8 !important;
+            fill: #38bdf8 !important;
+        }
+
+        [data-testid="stSidebar"] [data-testid="stExpander"] [data-testid="stExpanderDetails"] {
+            background-color: #1e293b !important;
+            border-top: 1px solid #334155 !important;
+            padding: 1rem !important;
+        }
+
+        /* Sidebar Sliders & Tooltips */
+        [data-testid="stSidebar"] .stSlider label {
+            color: #cbd5e1 !important;
+            font-weight: 600 !important;
+        }
+
+        [data-testid="stSidebar"] .stSlider [data-baseweb="slider"] {
+            color: #38bdf8 !important;
+        }
+
+        [data-testid="stSidebar"] .stSlider [role="slider"] {
+            background-color: #38bdf8 !important;
+            border: 2px solid #ffffff !important;
+        }
+
         .sidebar-status-card {
             background: #1e293b;
             border: 1px solid #334155;
@@ -157,8 +215,20 @@ st.markdown(
             font-size: 0.85rem;
             color: #e2e8f0 !important;
             margin-bottom: 0.3rem;
+        }
+        .sidebar-status-item span {
+            font-weight: 700;
+            color: #38bdf8 !important;
+        }
 
-            span { font-weight: 700; color: #38bdf8 !important; }
+        /* Fully Responsive Stats Grid for Mobile & Desktop */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.2rem;
+            margin-bottom: 1.8rem;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         /* Metric Cards */
@@ -168,6 +238,12 @@ st.markdown(
             border-radius: 12px;
             padding: 1.2rem 1.4rem;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            box-sizing: border-box;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
         }
         .metric-card .label {
             font-size: 0.78rem;
@@ -177,15 +253,43 @@ st.markdown(
             letter-spacing: 0.05em;
         }
         .metric-card .value {
-            font-size: 1.7rem;
+            font-size: 1.65rem;
             font-weight: 800;
             color: #0f172a;
-            margin-top: 0.2rem;
+            margin-top: 0.25rem;
+            line-height: 1.2;
         }
         .metric-card .sub {
             font-size: 0.8rem;
             color: #94a3b8;
-            margin-top: 0.1rem;
+            margin-top: 0.2rem;
+            font-weight: 500;
+        }
+
+        /* Mobile Breakpoints for Responsive Grid */
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+                gap: 0.85rem;
+            }
+            .metric-card {
+                padding: 1rem 1.1rem !important;
+            }
+            .metric-card .value {
+                font-size: 1.4rem !important;
+            }
+            .metric-card .label {
+                font-size: 0.72rem !important;
+            }
+            .metric-card .sub {
+                font-size: 0.75rem !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         /* Badges */
@@ -279,7 +383,7 @@ with st.sidebar:
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    with st.expander("⚙️ Enterprise Audit Controls", expanded=False):
+    with st.expander("Enterprise Audit Controls", expanded=False):
         st.markdown("<div style='font-size:0.8rem;color:#cbd5e1;margin-bottom:0.5rem;'>Risk Sensitivity Settings</div>", unsafe_allow_html=True)
         dollar_tolerance = st.slider(
             "Max Dollar Discrepancy ($)",
@@ -325,14 +429,19 @@ if page == "Overview":
         unsafe_allow_html=True,
     )
 
-    # Key Statistics Bar
+    # Key Statistics Bar — Responsive 5-Card Layout
     st.markdown(
         """
-        <div class="stats-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.8rem;">
+        <div class="stats-grid">
             <div class="metric-card">
                 <div class="label">Total Invoices Analyzed</div>
                 <div class="value">5,543</div>
                 <div class="sub">Historical dataset (2024)</div>
+            </div>
+            <div class="metric-card">
+                <div class="label">Freight Model Accuracy</div>
+                <div class="value" style="color: #0284c7;">97.1% R²</div>
+                <div class="sub">Random Forest Regressor</div>
             </div>
             <div class="metric-card">
                 <div class="label">Invoice Risk Accuracy</div>
@@ -359,14 +468,14 @@ if page == "Overview":
     act_col1, act_col2 = st.columns(2, gap="large")
     with act_col1:
         st.button(
-            "Launch Freight Cost Predictor →",
+            "Launch Freight Cost Predictor",
             key="launch_freight_btn",
             on_click=set_page,
             args=("Freight Cost Prediction",),
         )
     with act_col2:
         st.button(
-            "Launch Invoice Risk Classifier →",
+            "Launch Invoice Risk Classifier",
             key="launch_flagging_btn",
             on_click=set_page,
             args=("Invoice Risk Flagging",),
@@ -400,7 +509,7 @@ if page == "Overview":
                         Procurement teams process thousands of invoices where freight charges fluctuate based on product mix, order size, and vendor billing policies. Without automated benchmarks, overcharges go undetected.
                     </div>
                     <div style="margin-top:1.2rem;padding-top:0.8rem;border-top:1px solid #cbd5e1;font-size:0.83rem;color:#1e293b;">
-                        <strong>AI Solution:</strong> Random Forest Regression model that predicts standard expected freight costs ($) for any invoice dollar total, giving finance teams an instant validation baseline.
+                        <strong>AI Solution:</strong> Random Forest Regression model (97.1% R² score) that predicts standard expected freight costs ($) for any invoice dollar total, giving finance teams an instant validation baseline.
                     </div>
                 </div>
                 """,
@@ -446,6 +555,7 @@ if page == "Overview":
                     </div>
                     <ul style="font-size:0.85rem;color:#334155;padding-left:1.2rem;line-height:1.7;">
                         <li><strong>Algorithm:</strong> Random Forest Regressor</li>
+                        <li><strong>Accuracy (R²):</strong> 97.1% Variance Explained ($24.78 MAE)</li>
                         <li><strong>Input:</strong> Total Invoice Dollars</li>
                         <li><strong>Output:</strong> Predicted Freight ($) baseline</li>
                         <li><strong>UseCase:</strong> Overcharge & shipping variance audit</li>

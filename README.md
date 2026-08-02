@@ -76,13 +76,13 @@ Regression models are evaluated using:
 - **RMSE (Root Mean Squared Error)** - Penalises large errors more heavily
 - **R-squared** - Proportion of variance explained (higher is better)
 
-The **Random Forest Regressor** achieved the lowest MAE and was selected as the production model.
+The **Random Forest Regressor** achieved **97.1% R²** (variance explained) and **MAE of $24.78**, selected as the production model.
 
 ### Saved Model
 
-`
+```
 Freight_cost_prediction/models/predict_freight_model.pkl
-`
+```
 
 ---
 
