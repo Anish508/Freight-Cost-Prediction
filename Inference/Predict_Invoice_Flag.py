@@ -46,6 +46,7 @@ def predict_invoice_flag(
     days_po_to_invoice:  float | list = 0.0,
     dollar_tolerance:    float = 5.0,
     prob_cutoff:         float = 0.50,
+    po_delay_threshold:  float = 15.0,
 ) -> pd.DataFrame:
     """
     Predict whether one or more invoices should be flagged for manual review.
@@ -60,6 +61,7 @@ def predict_invoice_flag(
     days_po_to_invoice   : Days between PO Date and Invoice Date (default 0.0).
     dollar_tolerance     : Maximum allowed dollar discrepancy tolerance (default $5.00).
     prob_cutoff          : ML model flag probability threshold (default 0.50).
+    po_delay_threshold  : Minimum days delay between PO and invoice to flag (default 15 days).
 
     Returns
     -------
@@ -122,9 +124,9 @@ def predict_invoice_flag(
             reasons.append(f"Price Discrepancy (${d_disc:,.2f} > ${dollar_tolerance:,.2f})")
         if q_disc > 0:
             reasons.append(f"Quantity Mismatch ({int(q_disc)} units)")
-        if row["days_po_to_invoice"] > 15:
-            reasons.append(f"PO Delay ({int(row['days_po_to_invoice'])} days)")
-        if prob >= prob_cutoff and not reasons:
+        if row["days_po_to_invoice"] > po_delay_threshold:
+            reasons.append(f"PO Delay ({int(row['days_po_to_invoice'])} days > {int(po_delay_threshold)} days)")
+        if prob >= prob_cutoff:
             reasons.append(f"ML Anomaly Score ({prob:.1%} >= {prob_cutoff:.1%})")
 
         if reasons:

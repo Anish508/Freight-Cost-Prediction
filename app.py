@@ -425,6 +425,22 @@ with st.sidebar:
             step=5,
             help="Minimum ML probability required to trigger an anomaly review.",
         ) / 100.0
+        po_delay_threshold = st.slider(
+            "Min PO Delay Threshold (Days)",
+            min_value=1,
+            max_value=60,
+            value=15,
+            step=1,
+            help="Minimum elapsed days between PO placement and invoice issue required to trigger a PO delay audit flag.",
+        )
+        freight_tolerance_pct = st.slider(
+            "Freight Overcharge Threshold (%)",
+            min_value=5.0,
+            max_value=50.0,
+            value=15.0,
+            step=2.5,
+            help="Percentage above ML predicted freight baseline required to trigger Overcharged status.",
+        )
 
     st.markdown(
         """
@@ -673,6 +689,16 @@ elif page == "Freight Cost Prediction":
         unsafe_allow_html=True,
     )
 
+    st.markdown(
+        f"""
+        <div style="background:#e0f2fe;border:1px solid #7dd3fc;border-radius:8px;padding:0.75rem 1rem;margin-bottom:1.5rem;font-size:0.88rem;color:#0369a1;display:flex;align-items:center;gap:0.5rem;">
+            <span style="font-weight:700;">Active Sidebar Audit Policy:</span> 
+            <span>Freight Overcharge Alert Threshold: <strong>+{freight_tolerance_pct:.1f}%</strong> over ML Baseline</span>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
     tab1, tab2 = st.tabs(["Single Invoice Audit", "Batch Freight Evaluation"])
 
     # ---- Single prediction ------------------------------------------------
@@ -703,7 +729,11 @@ elif page == "Freight Cost Prediction":
         with col_out:
             if predict_btn:
                 with st.spinner("Calculating ML baseline..."):
-                    result = predict_freight(invoice_dollars, actual_freight=actual_freight_in)
+                    result = predict_freight(
+                        invoice_dollars,
+                        actual_freight=actual_freight_in,
+                        variance_threshold_pct=freight_tolerance_pct,
+                    )
                     predicted = float(result["predicted_freight"].iloc[0])
                     actual = float(result["actual_freight"].iloc[0])
                     var_dollars = float(result["freight_variance"].iloc[0])
@@ -764,54 +794,198 @@ elif page == "Freight Cost Prediction":
 
     # ---- Batch prediction ------------------------------------------------
     with tab2:
-        st.markdown("<div class='section-header'>Batch Freight Baseline Input</div>", unsafe_allow_html=True)
-        st.markdown(
-            "<div style='font-size:0.85rem;color:#64748b;margin-bottom:0.8rem;'>"
-            "Enter one invoice dollar amount per line."
-            "</div>",
-            unsafe_allow_html=True,
-        )
+        st.markdown("<div class='section-header'>Batch Freight & Overcharge Audit</div>", unsafe_allow_html=True)
+        
+        batch_subtab1, batch_subtab2 = st.tabs(["Upload Freight CSV", "Quick Text Input"])
 
-        raw_input = st.text_area(
-            "Invoice Dollar Amounts (one per line)",
-            value="214.26\n140.55\n106.60\n137483.78\n15527.25\n3608.11",
-            height=180,
-            label_visibility="collapsed",
-        )
-        batch_btn = st.button("Run Batch Evaluation", key="freight_batch")
+        with batch_subtab1:
+            st.markdown(
+                "<div style='font-size:0.85rem;color:#64748b;margin-bottom:0.6rem;'>"
+                "Upload a CSV with <strong>invoice_dollars</strong> and optional <strong>actual_freight</strong> columns."
+                "</div>",
+                unsafe_allow_html=True,
+            )
 
-        if batch_btn:
-            lines = [l.strip() for l in raw_input.strip().split("\n") if l.strip()]
-            amounts = []
-            for l in lines:
+            # Sample template download
+            freight_sample_df = pd.DataFrame({
+                "invoice_dollars": [214.26, 1850.00, 106.60, 137483.78, 15527.25, 3608.11],
+                "actual_freight":  [3.47,   120.00,  5.54,   2935.20,   82.88,    45.00],
+            })
+            st.download_button(
+                "Download Freight Audit Template CSV",
+                data=freight_sample_df.to_csv(index=False).encode("utf-8"),
+                file_name="freight_audit_template.csv",
+                mime="text/csv",
+            )
+
+            uploaded_freight = st.file_uploader("Upload Freight CSV", type=["csv"], key="freight_csv_uploader")
+
+            if uploaded_freight is not None:
                 try:
-                    amounts.append(float(l))
-                except ValueError:
-                    pass
+                    df_freight = pd.read_csv(uploaded_freight, on_bad_lines="skip")
+                    if "invoice_dollars" not in df_freight.columns:
+                        st.error("CSV must contain an 'invoice_dollars' column.")
+                    else:
+                        dollars_list = df_freight["invoice_dollars"].tolist()
+                        actual_list = df_freight["actual_freight"].tolist() if "actual_freight" in df_freight.columns else None
 
-            if not amounts:
-                st.error("Please enter at least one valid numeric amount.")
-            else:
-                with st.spinner("Predicting freight for batch..."):
-                    results = predict_freight(amounts)
+                        with st.spinner("Auditing batch freight charges..."):
+                            results = predict_freight(
+                                dollars_list,
+                                actual_freight=actual_list,
+                                variance_threshold_pct=freight_tolerance_pct,
+                            )
 
-                st.markdown("<div class='section-header'>Batch Predictions</div>", unsafe_allow_html=True)
-                st.dataframe(
-                    results.rename(columns={
-                        "invoice_dollars": "Invoice ($)",
-                        "predicted_freight": "Predicted Freight ($)",
-                    }),
-                    use_container_width=True,
-                    hide_index=True,
-                )
+                        st.markdown("<div class='section-header'>Batch Freight Audit Results</div>", unsafe_allow_html=True)
 
-                csv_out = results.to_csv(index=False).encode("utf-8")
-                st.download_button(
-                    "Download Predictions CSV",
-                    data=csv_out,
-                    file_name="predicted_freight_batch.csv",
-                    mime="text/csv",
-                )
+                        if "freight_status" in results.columns:
+                            total_cnt = len(results)
+                            overcharged_cnt = int((results["freight_status"] == "OVERCHARGED").sum())
+                            total_leakage = float(results[results["freight_status"] == "OVERCHARGED"]["freight_variance"].sum()) if overcharged_cnt > 0 else 0.0
+                            avg_var_pct = float(results["variance_pct"].mean())
+
+                            m1, m2, m3, m4 = st.columns(4)
+                            with m1:
+                                st.markdown(
+                                    f"<div class='metric-card'><div class='label'>Total Invoices</div>"
+                                    f"<div class='value'>{total_cnt}</div></div>",
+                                    unsafe_allow_html=True,
+                                )
+                            with m2:
+                                st.markdown(
+                                    f"<div class='metric-card'><div class='label'>Overcharged Invoices</div>"
+                                    f"<div class='value' style='color:#dc2626;'>{overcharged_cnt}</div>"
+                                    f"<div class='sub'>{overcharged_cnt/total_cnt*100:.1f}% of batch</div></div>",
+                                    unsafe_allow_html=True,
+                                )
+                            with m3:
+                                st.markdown(
+                                    f"<div class='metric-card'><div class='label'>Overcharge Leakage</div>"
+                                    f"<div class='value' style='color:#dc2626;'>${total_leakage:,.2f}</div>"
+                                    f"<div class='sub'>Total excess billed</div></div>",
+                                    unsafe_allow_html=True,
+                                )
+                            with m4:
+                                st.markdown(
+                                    f"<div class='metric-card'><div class='label'>Avg Variance</div>"
+                                    f"<div class='value'>{avg_var_pct:+.1f}%</div>"
+                                    f"<div class='sub'>vs ML baseline</div></div>",
+                                    unsafe_allow_html=True,
+                                )
+
+                            st.markdown("<br>", unsafe_allow_html=True)
+
+                            display_f = results.rename(columns={
+                                "invoice_dollars":   "Invoice ($)",
+                                "actual_freight":    "Actual Freight ($)",
+                                "predicted_freight": "Predicted Freight ($)",
+                                "freight_variance":  "Variance ($)",
+                                "variance_pct":      "Variance (%)",
+                                "freight_status":    "Status",
+                                "audit_statement":   "Audit Statement",
+                            })
+
+                            styler = display_f.style
+                            map_method = getattr(styler, "map", getattr(styler, "applymap", None))
+                            styled_f = map_method(
+                                lambda v: "background-color:#fee2e2;color:#991b1b;font-weight:700;"
+                                if v == "OVERCHARGED" else "background-color:#dcfce7;color:#166534;",
+                                subset=["Status"],
+                            )
+
+                            st.dataframe(styled_f, use_container_width=True, hide_index=True)
+
+                            csv_download = results.to_csv(index=False).encode("utf-8")
+                            st.download_button(
+                                "Download Freight Audit Report CSV",
+                                data=csv_download,
+                                file_name="freight_audit_report.csv",
+                                mime="text/csv",
+                            )
+                        else:
+                            st.dataframe(results, use_container_width=True, hide_index=True)
+
+                except Exception as exc:
+                    st.error(f"Error processing CSV file: {exc}")
+
+        with batch_subtab2:
+            st.markdown(
+                "<div style='font-size:0.85rem;color:#64748b;margin-bottom:0.8rem;'>"
+                "Enter one invoice amount per line (or <code>invoice_dollars, actual_freight</code> per line)."
+                "</div>",
+                unsafe_allow_html=True,
+            )
+
+            raw_input = st.text_area(
+                "Freight Data Input",
+                value="214.26, 3.47\n1850.00, 120.00\n106.60, 5.54\n137483.78, 2935.20\n15527.25, 82.88\n3608.11, 45.00",
+                height=180,
+                label_visibility="collapsed",
+            )
+            batch_btn = st.button("Run Batch Evaluation", key="freight_batch")
+
+            if batch_btn:
+                lines = [l.strip() for l in raw_input.strip().split("\n") if l.strip()]
+                dlrs = []
+                acts = []
+                has_acts = False
+
+                for l in lines:
+                    parts = [p.strip() for p in l.split(",")]
+                    try:
+                        dlrs.append(float(parts[0]))
+                        if len(parts) > 1 and parts[1]:
+                            acts.append(float(parts[1]))
+                            has_acts = True
+                        else:
+                            acts.append(0.0)
+                    except ValueError:
+                        pass
+
+                if not dlrs:
+                    st.error("Please enter at least one valid numeric amount.")
+                else:
+                    actual_param = acts if (has_acts and len(acts) == len(dlrs)) else None
+                    with st.spinner("Auditing freight data..."):
+                        results = predict_freight(dlrs, actual_freight=actual_param, variance_threshold_pct=freight_tolerance_pct)
+
+                    st.markdown("<div class='section-header'>Batch Freight Evaluation Results</div>", unsafe_allow_html=True)
+
+                    if "freight_status" in results.columns:
+                        display_f = results.rename(columns={
+                            "invoice_dollars":   "Invoice ($)",
+                            "actual_freight":    "Actual Freight ($)",
+                            "predicted_freight": "Predicted Freight ($)",
+                            "freight_variance":  "Variance ($)",
+                            "variance_pct":      "Variance (%)",
+                            "freight_status":    "Status",
+                            "audit_statement":   "Audit Statement",
+                        })
+                        styler = display_f.style
+                        map_method = getattr(styler, "map", getattr(styler, "applymap", None))
+                        styled_f = map_method(
+                            lambda v: "background-color:#fee2e2;color:#991b1b;font-weight:700;"
+                            if v == "OVERCHARGED" else "background-color:#dcfce7;color:#166534;",
+                            subset=["Status"],
+                        )
+                        st.dataframe(styled_f, use_container_width=True, hide_index=True)
+                    else:
+                        st.dataframe(
+                            results.rename(columns={
+                                "invoice_dollars": "Invoice ($)",
+                                "predicted_freight": "Predicted Freight ($)",
+                            }),
+                            use_container_width=True,
+                            hide_index=True,
+                        )
+
+                    csv_out = results.to_csv(index=False).encode("utf-8")
+                    st.download_button(
+                        "Download Predictions CSV",
+                        data=csv_out,
+                        file_name="predicted_freight_batch.csv",
+                        mime="text/csv",
+                    )
 
 
 # ===========================================================================
@@ -823,6 +997,20 @@ elif page == "Invoice Risk Flagging":
         <div class="page-banner">
             <h1>Invoice Risk Flagging & Audit System</h1>
             <p>Automated multi-factor risk assessment combining hard business rules with Machine Learning.</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        f"""
+        <div style="background:#e0f2fe;border:1px solid #7dd3fc;border-radius:8px;padding:0.75rem 1rem;margin-bottom:1.5rem;font-size:0.88rem;color:#0369a1;display:flex;flex-wrap:wrap;align-items:center;gap:0.8rem;">
+            <span style="font-weight:700;">Active Sidebar Audit Policy:</span> 
+            <span>Max Price Discrepancy: <strong>${dollar_tolerance:.2f}</strong></span>
+            <span>|</span>
+            <span>ML Anomaly Cutoff: <strong>{prob_cutoff*100:.0f}%</strong></span>
+            <span>|</span>
+            <span>Min PO Delay Threshold: <strong>{po_delay_threshold} days</strong></span>
         </div>
         """,
         unsafe_allow_html=True,
@@ -904,6 +1092,7 @@ elif page == "Invoice Risk Flagging":
                     days_po_to_invoice=po_delay,
                     dollar_tolerance=dollar_tolerance,
                     prob_cutoff=prob_cutoff,
+                    po_delay_threshold=po_delay_threshold,
                 )
                 flag_val = int(result["flag_invoice"].iloc[0])
                 prob_val = float(result["flag_probability"].iloc[0])
@@ -1020,6 +1209,7 @@ elif page == "Invoice Risk Flagging":
                             days_po_to_invoice=dpi_list,
                             dollar_tolerance=dollar_tolerance,
                             prob_cutoff=prob_cutoff,
+                            po_delay_threshold=po_delay_threshold,
                         )
 
                     total = len(results)

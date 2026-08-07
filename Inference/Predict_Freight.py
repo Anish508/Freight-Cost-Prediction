@@ -71,18 +71,23 @@ def predict_freight(
         
         pcts = []
         statuses = []
+        statements = []
         for p, a, v in zip(result["predicted_freight"], result["actual_freight"], result["freight_variance"]):
             pct = (v / p * 100) if p > 0 else 0.0
             pcts.append(round(pct, 1))
             if v > 5.0 and pct > variance_threshold_pct:
                 statuses.append("OVERCHARGED")
+                statements.append(f"OVERCHARGE WARNING: Billed freight (${a:,.2f}) is ${v:,.2f} ({pct:+.1f}%) higher than ML baseline (${p:,.2f}).")
             elif v < -5.0:
                 statuses.append("BELOW EXPECTED")
+                statements.append(f"BELOW EXPECTED: Billed freight (${a:,.2f}) is ${abs(v):,.2f} lower than ML baseline (${p:,.2f}).")
             else:
                 statuses.append("NORMAL")
+                statements.append(f"NORMAL: Billed freight (${a:,.2f}) is within benchmarks (+{variance_threshold_pct:.1f}% threshold).")
 
         result["variance_pct"] = pcts
         result["freight_status"] = statuses
+        result["audit_statement"] = statements
 
     return result
 

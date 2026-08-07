@@ -30,15 +30,16 @@ Because `avg_receiving_delay` was missing from the feature matrix, the unrefacto
 
 ## 2. Enterprise Real-World Features Added
 
-### **A. Freight Overcharge Baseline Variance Analysis**
+### **A. Freight Overcharge Baseline Variance Analysis & Bulk Audit Statements**
 - **Inference Module:** [`Inference/Predict_Freight.py`](file:///d:/PDS%20Project/Inference/Predict_Freight.py)
-- **Capability:** Compares actual billed shipping charges against the Random Forest ML predicted baseline.
+- **Capability:** Compares actual billed shipping charges against the Random Forest ML predicted baseline for single invoices as well as Bulk CSV uploads.
 - **Metrics Calculated:**
   - `predicted_freight` ($) — Expected freight baseline cost
   - `actual_freight` ($) — Billed shipping cost
   - `freight_variance` ($) — Dollar difference (`actual - predicted`)
   - `variance_pct` (%) — Percentage variance over baseline
-  - `freight_status` — `NORMAL` | `OVERCHARGED`
+  - `freight_status` — `NORMAL` | `OVERCHARGED` | `BELOW EXPECTED`
+  - `audit_statement` — Per-row automated audit explanation (e.g. `OVERCHARGE WARNING: Billed freight ($120.00) is $105.71 (+739.7%) higher than ML baseline ($14.29)`)
 
 ### **B. Multi-Factor Risk Trigger Tags**
 - **Inference Module:** [`Inference/Predict_Invoice_Flag.py`](file:///d:/PDS%20Project/Inference/Predict_Invoice_Flag.py)
@@ -50,9 +51,11 @@ Because `avg_receiving_delay` was missing from the feature matrix, the unrefacto
 
 ### **C. Sidebar Enterprise Risk Controls**
 - **User Interface:** [`app.py`](file:///d:/PDS%20Project/app.py)
-- **Capability:** Collapsible **`⚙️ Enterprise Audit Controls`** panel in the sidebar allows finance auditors to adjust:
+- **Capability:** Collapsible **`Enterprise Audit Controls`** panel in the sidebar allows finance auditors to adjust live system audit parameters:
   - **Max Dollar Discrepancy Tolerance ($):** `$1.00` to `$50.00` (default `$5.00`)
   - **ML Anomaly Sensitivity Threshold (%):** `30%` to `90%` (default `50%`)
+  - **Min PO Delay Threshold (Days):** `1` to `60` days (default `15` days)
+  - **Freight Overcharge Threshold (%):** `5.0%` to `50.0%` (default `15.0%`)
 
 ---
 
